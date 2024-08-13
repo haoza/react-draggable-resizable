@@ -6,7 +6,6 @@
 [![npm](https://img.shields.io/npm/dt/react-draggable-resizable.svg?style=flat-square)](https://www.npmjs.com/package/react-draggable-resizable)
 
 > React Component for draggable and resizable elements.
-
 ## Thanks
 
 Thanks to @mauricius for his work on [vue-draggable-resizable](https://github.com/mauricius/vue-draggable-resizable) component.
@@ -60,13 +59,16 @@ Register the component globally
 
 ```js
 // main.js
-import { createApp } from 'vue'
-import VueDraggableResizable from 'react-draggable-resizable'
-import App from './App.vue'
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './App.tsx'
 
-createApp(App)
-  .component("react-draggable-resizable", VueDraggableResizable)
-  .mount('#app')
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
 ```
 
 You may now use the component in your markup
