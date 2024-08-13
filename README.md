@@ -1,4 +1,4 @@
-<p align="center"><img src="https://rawgit.com/mauricius/react-draggable-resizable/v1/docs/resources/logo.png" alt="logo"></p>
+<p align="center"><img src="https://rawgit.com/mauricius/vue-draggable-resizable/v1/docs/resources/logo.png" alt="logo"></p>
 <h1 align="center">ReactDraggableResizable</h1>
 
 ## [中文文档](https://github.com/haoza/react-draggable-resizable/blob/main/README-zh.md)
