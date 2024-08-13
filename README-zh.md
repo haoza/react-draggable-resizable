@@ -18,6 +18,56 @@
 
 比如: "activated"  --> "onActivated"
 
+## 安装和基础用法
+
+```bash
+$ npm install --save react-draggable-resizable-scalable
+```
+
+```
+import { ReactDraggableResizable } from "/react-draggable-resizable";
+import "/react-draggable-resizable/style.css"
+
+const App = () => {
+  return (
+    <div className="content">
+      <div
+        style={{
+          height: "500px",
+          width: "500px",
+          border: " 1px solid red",
+          position: "relative",
+        }}
+      >
+        <ReactDraggableResizable
+          w={100}
+          h={100}
+          y={10}
+          x={30}
+          parent="true"
+          draggable
+          resizable
+          active
+        >
+          <p>
+            Hello! I'm a flexible component. You can drag me around and you can
+            resize me.
+          </p>
+        </ReactDraggableResizable>
+      </div>
+    </div>
+  );
+};
+
+export default App;
+
+```
+
+## 联系我
+
+please email arvin.haoza@gmail.com
+
+
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE) for more information.

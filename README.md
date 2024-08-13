@@ -25,7 +25,7 @@ eq: "activated"  --> "onActivated"
 ## Install and basic usage
 
 ```bash
-$ npm install --save react-draggable-resizable
+$ npm install --save react-draggable-resizable-scalable
 ```
 
 ```
