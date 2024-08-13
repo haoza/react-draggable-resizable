@@ -8,8 +8,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, "src/entry.js"),
-      name: "VueDraggableResizable",
-      fileName: "vue-draggable-resizable",
+      name: "ReactDraggableResizable",
+      fileName: "react-draggable-resizable",
     },
     rollupOptions: {
       external: ["react"],
