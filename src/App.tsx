@@ -1,5 +1,6 @@
-import "./App.css";
 import { ReactDraggableResizable } from "./components/react-draggable-resizable";
+
+
 const App = () => {
   return (
     <div className="content">
@@ -11,7 +12,14 @@ const App = () => {
           position: "relative",
         }}
       >
-        <ReactDraggableResizable w="100" h="100" parent="true">
+        <ReactDraggableResizable
+          w="100"
+          h="100"
+          parent="true"
+          draggable
+          resizable
+          active
+        >
           <p>
             Hello! I'm a flexible component. You can drag me around and you can
             resize me.

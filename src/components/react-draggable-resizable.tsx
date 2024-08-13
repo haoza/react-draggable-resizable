@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useLayoutEffect } from "react";
 import {
   matchesSelectorToParentElements,
   getComputedSize,
@@ -11,6 +11,8 @@ import {
   restrictToBounds,
   snapToGrid,
 } from "../utils/fns";
+
+import "./react-draggable-resizable.css";
 
 const events = {
   mouse: {
@@ -94,10 +96,6 @@ const ReactDraggableResizableCore = (props: any) => {
         heightTouched: false,
 
         aspectFactor: null,
-
-        parentWidth: null,
-        parentHeight: null,
-        handle: null,
         enabled: props.active,
         resizing: false,
         dragging: false,
@@ -113,12 +111,9 @@ const ReactDraggableResizableCore = (props: any) => {
     dragEnable,
     dragging,
     enabled,
-    handle,
     height,
     heightTouched,
     left,
-    parentHeight,
-    parentWidth,
     resizeEnable,
     resizing,
     right,
@@ -130,6 +125,8 @@ const ReactDraggableResizableCore = (props: any) => {
   const $elRef = useRef({} as any);
   const mouseClickPositionRef = useRef({} as any);
   const boundsRef = useRef({} as any);
+  const handleRef = useRef<string>("");
+  const parentStyleRef = useRef({ parentHeight: 0, parentWidth: 0 });
 
   const computedWidth = useMemo(() => {
     if (w === "auto") {
@@ -167,14 +164,17 @@ const ReactDraggableResizableCore = (props: any) => {
     return maxHeight;
   }, [maxHeight]);
   const resizingOnX = useMemo(() => {
+    const handle = handleRef.current;
     return Boolean(handle) && (handle.includes("l") || handle.includes("r"));
-  }, [handle]);
+  }, []);
   const resizingOnY = useMemo(() => {
+    const handle = handleRef.current;
     return Boolean(handle) && (handle.includes("t") || handle.includes("b"));
-  }, [handle]);
+  }, []);
   const isCornerHandle = useMemo(() => {
+    const handle = handleRef.current;
     return Boolean(handle) && ["tl", "tr", "br", "bl"].includes(handle);
-  }, [handle]);
+  }, []);
 
   const style = (() => {
     return {
@@ -209,11 +209,12 @@ const ReactDraggableResizableCore = (props: any) => {
   const checkParentSize = () => {
     if (parent) {
       const [newParentWidth, newParentHeight] = getParentSize();
-
-      parentWidth = newParentWidth;
-      parentHeight = newParentHeight;
-      right = parentWidth - width - left;
-      bottom = parentHeight - height - top;
+      parentStyleRef.current = {
+        parentWidth: newParentWidth,
+        parentHeight: newParentHeight,
+      };
+      right = newParentWidth - width - left;
+      bottom = newParentHeight - height - top;
     }
   };
   const getParentSize = () => {
@@ -226,7 +227,7 @@ const ReactDraggableResizableCore = (props: any) => {
       ];
     }
 
-    return [null, null];
+    return [0, 0];
   };
   const elementTouchDown = (e: any) => {
     eventsFor = events.touch;
@@ -294,6 +295,7 @@ const ReactDraggableResizableCore = (props: any) => {
     }
   };
   const calcDragLimits = () => {
+    const { parentWidth, parentHeight } = parentStyleRef.current;
     return {
       minLeft: left % grid[0],
       maxLeft:
@@ -331,8 +333,9 @@ const ReactDraggableResizableCore = (props: any) => {
 
     handleDown(handle, e);
   };
-  const handleDown = (handle: any, e: any) => {
-    // stop preeve
+  const handleDown = (handle: any, e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    e.stopPropagation()
+    e.preventDefault()
     if (e instanceof MouseEvent && e.which !== 1) {
       return;
     }
@@ -345,13 +348,23 @@ const ReactDraggableResizableCore = (props: any) => {
 
     // Here we avoid a dangerous recursion by faking
     // corner handles as middle handles
+    let targetHandle;
     if (lockAspectRatio && !handle.includes("m")) {
-      handle = "m" + handle.substring(1);
+      targetHandle = "m" + handle.substring(1);
     } else {
-      handle = handle;
+      targetHandle = handle;
     }
 
     resizeEnable = true;
+
+    handleRef.current = targetHandle;
+    setLocalState((state: any) => {
+      return {
+        ...state,
+        resizeEnable,
+      };
+    });
+
     const mouseClickPosition = mouseClickPositionRef.current;
     mouseClickPosition.mouseX = e.touches ? e.touches[0].pageX : e.pageX;
     mouseClickPosition.mouseY = e.touches ? e.touches[0].pageY : e.pageY;
@@ -420,7 +433,7 @@ const ReactDraggableResizableCore = (props: any) => {
       limits.maxRight = right + Math.floor((width - minW) / gridX) * gridX;
       limits.minBottom = bottom % gridY;
       limits.maxBottom = bottom + Math.floor((height - minH) / gridY) * gridY;
-
+      const { parentWidth, parentHeight } = parentStyleRef.current;
       if (maxW) {
         limits.minLeft = Math.max(limits.minLeft, parentWidth - right - maxW);
         limits.minRight = Math.max(limits.minRight, parentWidth - left - maxW);
@@ -545,6 +558,7 @@ const ReactDraggableResizableCore = (props: any) => {
     const bounds = boundsRef.current;
     const left = restrictToBounds(deltaX, bounds.minLeft, bounds.maxLeft);
 
+    const { parentWidth, parentHeight } = parentStyleRef.current;
     setLocalState((state: any) => {
       return {
         ...state,
@@ -559,6 +573,7 @@ const ReactDraggableResizableCore = (props: any) => {
     const bounds = boundsRef.current;
     const top = restrictToBounds(deltaY, bounds.minTop, bounds.maxTop);
 
+    const { parentWidth, parentHeight } = parentStyleRef.current;
     setLocalState((state: any) => {
       return {
         ...state,
@@ -572,6 +587,7 @@ const ReactDraggableResizableCore = (props: any) => {
     let top = localState.top;
     let right = localState.right;
     let bottom = localState.bottom;
+    const handle = handleRef.current;
 
     const mouseClickPosition = mouseClickPositionRef.current;
     const aspectFactor = localState.aspectFactor;
@@ -635,6 +651,7 @@ const ReactDraggableResizableCore = (props: any) => {
       }
     }
 
+    const { parentWidth, parentHeight } = parentStyleRef.current;
     const width = computeWidth(parentWidth, left, right);
     const height = computeHeight(parentHeight, top, bottom);
 
@@ -658,6 +675,8 @@ const ReactDraggableResizableCore = (props: any) => {
   };
   const changeWidth = (val: number) => {
     // should calculate with scale 1.
+
+    const { parentWidth, parentHeight } = parentStyleRef.current;
     const [newWidth, _] = snapToGrid(grid, val, 0, 1);
     const bounds = boundsRef.current;
     const right = restrictToBounds(
@@ -686,6 +705,8 @@ const ReactDraggableResizableCore = (props: any) => {
   };
   const changeHeight = (val: number) => {
     // should calculate with scale 1.
+
+    const { parentWidth, parentHeight } = parentStyleRef.current;
     const [_, newHeight] = snapToGrid(grid, 0, val, 1);
     const bounds = boundsRef.current;
     const bottom = restrictToBounds(
@@ -713,7 +734,7 @@ const ReactDraggableResizableCore = (props: any) => {
     });
   };
   const handleUp = (e: any) => {
-    handle = null;
+    handleRef.current = "";
 
     resetBoundsAndMouseState();
 
@@ -802,18 +823,10 @@ const ReactDraggableResizableCore = (props: any) => {
       aspectFactor,
     }));
   }, [lockAspectRatio]);
-  useEffect(() => {
-    if (resizing || dragging) {
-      return;
-    }
+ 
 
-    if (parent) {
-      boundsRef.current = calcResizeLimits();
-    }
-
-    changeWidth(w);
-  }, [w]);
-  useEffect(() => {
+  
+  useLayoutEffect(() => {
     if (resizing || dragging) {
       return;
     }
@@ -824,6 +837,50 @@ const ReactDraggableResizableCore = (props: any) => {
 
     changeHeight(h);
   }, [h]);
+
+  useEffect(() => {
+    if (!enableNativeDrag) {
+      $elRef.current.ondragstart = () => false;
+    }
+
+    const [parentWidth, parentHeight] = getParentSize();
+
+    const [width, height] = getComputedSize($elRef.current);
+
+    if (active) {
+      props.onActivated?.();
+    }
+    parentStyleRef.current = {
+      parentWidth,
+      parentHeight,
+    };
+    setLocalState((state: any) => {
+      return {
+        ...state,
+        bottom: parentHeight - height - top,
+        right: parentWidth - width - left,
+        width: w !== "auto" ? w : width,
+        height: h !== "auto" ? h : height,
+        aspectFactor: (w !== "auto" ? w : width) / (h !== "auto" ? h : height),
+      };
+    });
+
+    addEvent(document.documentElement, "mousedown", deselect);
+    addEvent(document.documentElement, "touchend touchcancel", deselect);
+
+    addEvent(window, "resize", checkParentSize);
+
+    return () => {
+      removeEvent(document.documentElement, "mousedown", deselect);
+      removeEvent(document.documentElement, "touchstart", handleUp);
+      removeEvent(document.documentElement, "mousemove", move);
+      removeEvent(document.documentElement, "touchmove", move);
+      removeEvent(document.documentElement, "mouseup", handleUp);
+      removeEvent(document.documentElement, "touchend touchcancel", deselect);
+
+      removeEvent(window, "resize", checkParentSize);
+    };
+  }, []);
 
   const classNames = [
     enabled && classNameActive,
