@@ -1,6 +1,7 @@
 <p align="center"><img src="https://rawgit.com/mauricius/react-draggable-resizable/v1/docs/resources/logo.png" alt="logo"></p>
 <h1 align="center">ReactDraggableResizable</h1>
-[中文文档](https://github.com/mauricius/vue-draggable-resizable/README-zh.md)
+[中文文档](https://github.com/haoza/react-draggable-resizable/blob/main/README-zh.md)
+
 [![Latest Version on NPM](https://img.shields.io/npm/v/react-draggable-resizable.svg?style=flat-square)](https://npmjs.com/package/react-draggable-resizable)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![npm](https://img.shields.io/npm/dt/react-draggable-resizable.svg?style=flat-square)](https://www.npmjs.com/package/react-draggable-resizable)
