@@ -1,7 +1,7 @@
 {
   "name": "react-draggable-resizable-scalable",
   "private": false,
-  "version": "0.0.1-beta.1",
+  "version": "0.0.2",
   "keywords": ["react", "draggable", "resizable", "scalable"],
   "author": "Arvin.hao <arvin.haoza@gmail.com>",
   "description": "React Component for resizable and draggable elements",
