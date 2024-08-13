@@ -1,8 +1,29 @@
 {
-  "name": "vite-project",
+  "name": "react-draggable-resizable",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "author": "Arvin.hao <arvin.haoza@gmail.com>",
+  "description": "React Component for resizable and draggable elements",
   "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/react-draggable-resizable.umd.cjs",
+  "module": "dist/react-draggable-resizable.js",
+  "unpkg": "dist/react-draggable-resizable.umd.cjs",
+  "browser": {
+    "./sfc": "src/react-draggable-resizable.tsx"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/react-draggable-resizable.js",
+      "require": "./dist/react-draggable-resizable.umd.cjs"
+    },
+    "./style.css": {
+      "import": "./dist/style.css",
+      "require": "./dist/style.css"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
