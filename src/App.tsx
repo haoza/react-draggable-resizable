@@ -13,8 +13,10 @@ const App = () => {
         }}
       >
         <ReactDraggableResizable
-          w="100"
-          h="100"
+          w={100}
+          h={100}
+          y={10}
+          x={30}
           parent="true"
           draggable
           resizable

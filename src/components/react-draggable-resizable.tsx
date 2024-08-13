@@ -84,14 +84,6 @@ const ReactDraggableResizableCore = (props: any) => {
   const [localState, setLocalState] = useState(
     () =>
       ({
-        left: props.x,
-        top: props.y,
-        right: null,
-        bottom: null,
-
-        width: null,
-        height: null,
-
         widthTouched: false,
         heightTouched: false,
 
@@ -107,18 +99,12 @@ const ReactDraggableResizableCore = (props: any) => {
 
   let {
     aspectFactor,
-    bottom,
     dragEnable,
     dragging,
     enabled,
-    height,
     heightTouched,
-    left,
     resizeEnable,
     resizing,
-    right,
-    top,
-    width,
     widthTouched,
     zIndex,
   } = localState;
@@ -126,6 +112,14 @@ const ReactDraggableResizableCore = (props: any) => {
   const mouseClickPositionRef = useRef({} as any);
   const boundsRef = useRef({} as any);
   const handleRef = useRef<string>("");
+  const positionRef = useRef({
+    left: props.x || 0,
+    right: 0,
+    top: props.y || 0,
+    bottom: 0,
+    width: 0,
+    height: 0,
+  });
   const parentStyleRef = useRef({ parentHeight: 0, parentWidth: 0 });
 
   const computedWidth = useMemo(() => {
@@ -135,8 +129,8 @@ const ReactDraggableResizableCore = (props: any) => {
       }
     }
 
-    return width + "px";
-  }, [widthTouched, w, width]);
+    return positionRef.current.width + "px";
+  }, [widthTouched, w, positionRef.current.width]);
   const actualHandles = useMemo(() => {
     if (!resizable) return [];
 
@@ -149,28 +143,17 @@ const ReactDraggableResizableCore = (props: any) => {
       }
     }
 
-    return height + "px";
-  }, [height, h, heightTouched]);
-  const minW = useMemo(() => {
-    return minWidth;
-  }, [minWidth]);
-  const minH = useMemo(() => {
-    return minHeight;
-  }, [minHeight]);
-  const maxW = useMemo(() => {
-    return maxWidth;
-  }, [maxWidth]);
-  const maxH = useMemo(() => {
-    return maxHeight;
-  }, [maxHeight]);
+    return positionRef.current.height + "px";
+  }, [positionRef.current.height, h, heightTouched]);
+
   const resizingOnX = useMemo(() => {
     const handle = handleRef.current;
     return Boolean(handle) && (handle.includes("l") || handle.includes("r"));
-  }, []);
+  }, [handleRef.current]);
   const resizingOnY = useMemo(() => {
     const handle = handleRef.current;
     return Boolean(handle) && (handle.includes("t") || handle.includes("b"));
-  }, []);
+  }, [handleRef.current]);
   const isCornerHandle = useMemo(() => {
     const handle = handleRef.current;
     return Boolean(handle) && ["tl", "tr", "br", "bl"].includes(handle);
@@ -178,7 +161,7 @@ const ReactDraggableResizableCore = (props: any) => {
 
   const style = (() => {
     return {
-      transform: `translate(${left}px, ${top}px)`,
+      transform: `translate(${positionRef.current.left}px, ${positionRef.current.top}px)`,
       width: computedWidth,
       height: computedHeight,
       zIndex: zIndex,
@@ -213,8 +196,10 @@ const ReactDraggableResizableCore = (props: any) => {
         parentWidth: newParentWidth,
         parentHeight: newParentHeight,
       };
-      right = newParentWidth - width - left;
-      bottom = newParentHeight - height - top;
+      positionRef.current.right =
+        newParentWidth - positionRef.current.width - positionRef.current.left;
+      positionRef.current.bottom =
+        newParentHeight - positionRef.current.height - positionRef.current.top;
     }
   };
   const getParentSize = () => {
@@ -281,10 +266,10 @@ const ReactDraggableResizableCore = (props: any) => {
       mouseClickPosition.mouseX = e.touches ? e.touches[0].pageX : e.pageX;
       mouseClickPosition.mouseY = e.touches ? e.touches[0].pageY : e.pageY;
 
-      mouseClickPosition.left = left;
-      mouseClickPosition.right = right;
-      mouseClickPosition.top = top;
-      mouseClickPosition.bottom = bottom;
+      mouseClickPosition.left = positionRef.current.left;
+      mouseClickPosition.right = positionRef.current.right;
+      mouseClickPosition.top = positionRef.current.top;
+      mouseClickPosition.bottom = positionRef.current.bottom;
 
       if (parent) {
         boundsRef.current = calcDragLimits();
@@ -295,6 +280,7 @@ const ReactDraggableResizableCore = (props: any) => {
     }
   };
   const calcDragLimits = () => {
+    const { bottom, height, left, right, top, width } = positionRef.current;
     const { parentWidth, parentHeight } = parentStyleRef.current;
     return {
       minLeft: left % grid[0],
@@ -333,9 +319,11 @@ const ReactDraggableResizableCore = (props: any) => {
 
     handleDown(handle, e);
   };
-  const handleDown = (handle: any, e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    e.stopPropagation()
-    e.preventDefault()
+  const handleDown = (
+    handle: any,
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    e.preventDefault();
     if (e instanceof MouseEvent && e.which !== 1) {
       return;
     }
@@ -365,6 +353,7 @@ const ReactDraggableResizableCore = (props: any) => {
       };
     });
 
+    const { bottom, left, right, top } = positionRef.current;
     const mouseClickPosition = mouseClickPositionRef.current;
     mouseClickPosition.mouseX = e.touches ? e.touches[0].pageX : e.pageX;
     mouseClickPosition.mouseY = e.touches ? e.touches[0].pageY : e.pageY;
@@ -379,19 +368,19 @@ const ReactDraggableResizableCore = (props: any) => {
     addEvent(document.documentElement, eventsFor.stop, handleUp);
   };
   const calcResizeLimits = () => {
-    let minW = props.minW;
-    let minH = props.minH;
-    let maxW = props.maxW;
-    let maxH = props.maxH;
+    let minW = minWidth;
+    let minH = minHeight;
+    let maxW = maxWidth;
+    let maxH = maxHeight;
 
-    const aspectFactor = props.aspectFactor;
+    const aspectFactor = localState.aspectFactor;
     const [gridX, gridY] = props.grid;
-    const width = props.width;
-    const height = props.height;
-    const left = props.left;
-    const top = props.top;
-    const right = props.right;
-    const bottom = props.bottom;
+    const width = positionRef.current.width;
+    const height = positionRef.current.height;
+    const left = positionRef.current.left;
+    const top = positionRef.current.top;
+    const right = positionRef.current.right;
+    const bottom = positionRef.current.bottom;
 
     if (lockAspectRatio) {
       if (minW / minH > aspectFactor) {
@@ -539,13 +528,14 @@ const ReactDraggableResizableCore = (props: any) => {
       bounds.maxBottom
     );
 
+    positionRef.current.left = left;
+    positionRef.current.right = right;
+    positionRef.current.top = top;
+    positionRef.current.bottom = bottom;
+
     setLocalState((state: any) => {
       return {
         ...state,
-        left,
-        right,
-        top,
-        bottom,
       };
     });
 
@@ -558,35 +548,37 @@ const ReactDraggableResizableCore = (props: any) => {
     const bounds = boundsRef.current;
     const left = restrictToBounds(deltaX, bounds.minLeft, bounds.maxLeft);
 
-    const { parentWidth, parentHeight } = parentStyleRef.current;
+    const { parentWidth } = parentStyleRef.current;
+
+    positionRef.current.left = left;
+    positionRef.current.right = parentWidth - positionRef.current.width - left;
+
     setLocalState((state: any) => {
       return {
         ...state,
-        left,
-        right: parentWidth - width - left,
       };
     });
   };
   const moveVertically = (val: any) => {
     // should calculate with scale 1.
-    const [_, deltaY] = snapToGrid(grid, left, val, 1);
+    const [_, deltaY] = snapToGrid(grid, positionRef.current.left, val, 1);
     const bounds = boundsRef.current;
     const top = restrictToBounds(deltaY, bounds.minTop, bounds.maxTop);
 
     const { parentWidth, parentHeight } = parentStyleRef.current;
+
+    positionRef.current.top = top;
+    positionRef.current.bottom =
+      parentHeight - positionRef.current.height - top;
     setLocalState((state: any) => {
       return {
         ...state,
-        top,
-        bottom: parentHeight - height - top,
       };
     });
   };
   const handleResize = (e: any) => {
-    let left = localState.left;
-    let top = localState.top;
-    let right = localState.right;
-    let bottom = localState.bottom;
+    let { bottom, height, left, right, top, width } = positionRef.current;
+
     const handle = handleRef.current;
 
     const mouseClickPosition = mouseClickPositionRef.current;
@@ -652,57 +644,59 @@ const ReactDraggableResizableCore = (props: any) => {
     }
 
     const { parentWidth, parentHeight } = parentStyleRef.current;
-    const width = computeWidth(parentWidth, left, right);
-    const height = computeHeight(parentHeight, top, bottom);
+    width = computeWidth(parentWidth, left, right);
+    height = computeHeight(parentHeight, top, bottom);
 
     if (onResize(handle, left, top, width, height) === false) {
       return;
     }
 
+    positionRef.current.left = left;
+    positionRef.current.right = right;
+    positionRef.current.top = top;
+    positionRef.current.bottom = bottom;
+    positionRef.current.height = height;
+    positionRef.current.width = width;
+
     setLocalState((state: any) => {
       return {
         ...state,
-        left,
-        top,
-        right,
-        width,
-        bottom,
-        height,
       };
     });
     props.onResizing?.(left, top, width, height);
     resizing = true;
   };
-  const changeWidth = (val: number) => {
-    // should calculate with scale 1.
+  // const changeWidth = (val: number) => {
+  //   // should calculate with scale 1.
 
-    const { parentWidth, parentHeight } = parentStyleRef.current;
-    const [newWidth, _] = snapToGrid(grid, val, 0, 1);
-    const bounds = boundsRef.current;
-    const right = restrictToBounds(
-      parentWidth - newWidth - left,
-      bounds.minRight,
-      bounds.maxRight
-    );
-    let bottom = props.bottom;
+  //   const { parentWidth, parentHeight } = parentStyleRef.current;
+  //   const [newWidth, _] = snapToGrid(grid, val, 0, 1);
+  //   const bounds = boundsRef.current;
+  //   const right = restrictToBounds(
+  //     parentWidth - newWidth - positionRef.current.left,
+  //     bounds.minRight,
+  //     bounds.maxRight
+  //   );
+  //   let bottom = props.bottom;
 
-    if (lockAspectRatio) {
-      bottom = bottom - (right - right) / aspectFactor;
-    }
+  //   if (lockAspectRatio) {
+  //     bottom = bottom - (right - right) / aspectFactor;
+  //   }
 
-    const width = computeWidth(parentWidth, left, right);
-    const height = computeHeight(parentHeight, top, bottom);
+  //   const width = computeWidth(parentWidth, positionRef.current.left, right);
+  //   const height = computeHeight(parentHeight, top, bottom);
 
-    setLocalState((state: any) => {
-      return {
-        ...state,
-        right,
-        width,
-        bottom,
-        height,
-      };
-    });
-  };
+  //   positionRef.current.right = right;
+  //   positionRef.current.bottom = bottom;
+  //   positionRef.current.width = width;
+  //   positionRef.current.height = height;
+
+  //   setLocalState((state: any) => {
+  //     return {
+  //       ...state,
+  //     };
+  //   });
+  // };
   const changeHeight = (val: number) => {
     // should calculate with scale 1.
 
@@ -710,32 +704,39 @@ const ReactDraggableResizableCore = (props: any) => {
     const [_, newHeight] = snapToGrid(grid, 0, val, 1);
     const bounds = boundsRef.current;
     const bottom = restrictToBounds(
-      parentHeight - newHeight - top,
+      parentHeight - newHeight - positionRef.current.top,
       bounds.minBottom,
       bounds.maxBottom
     );
-    let right = props.right;
+    let right = positionRef.current.right;
 
     if (lockAspectRatio) {
       right = right - (bottom - bottom) * aspectFactor;
     }
 
-    const width = computeWidth(parentWidth, left, right);
-    const height = computeHeight(parentHeight, top, bottom);
+    const width = computeWidth(parentWidth, positionRef.current.left, right);
+    const height = computeHeight(
+      parentHeight,
+      positionRef.current.top,
+      positionRef.current.bottom
+    );
+
+    positionRef.current.bottom = bottom;
+    positionRef.current.right = right;
+    positionRef.current.width = width;
+    positionRef.current.height = height;
+
 
     setLocalState((state: any) => {
       return {
         ...state,
-        right,
-        width,
-        bottom,
-        height,
       };
     });
   };
   const handleUp = (e: any) => {
     handleRef.current = "";
 
+    const { bottom, height, left, right, top, width } = positionRef.current;
     resetBoundsAndMouseState();
 
     dragEnable = false;
@@ -814,7 +815,7 @@ const ReactDraggableResizableCore = (props: any) => {
   useEffect(() => {
     let aspectFactor;
     if (lockAspectRatio) {
-      aspectFactor = width / height;
+      aspectFactor = positionRef.current.width / positionRef.current.height;
     } else {
       aspectFactor = undefined;
     }
@@ -823,22 +824,8 @@ const ReactDraggableResizableCore = (props: any) => {
       aspectFactor,
     }));
   }, [lockAspectRatio]);
- 
 
-  
   useLayoutEffect(() => {
-    if (resizing || dragging) {
-      return;
-    }
-
-    if (parent) {
-      boundsRef.current = calcResizeLimits();
-    }
-
-    changeHeight(h);
-  }, [h]);
-
-  useEffect(() => {
     if (!enableNativeDrag) {
       $elRef.current.ondragstart = () => false;
     }
@@ -854,13 +841,19 @@ const ReactDraggableResizableCore = (props: any) => {
       parentWidth,
       parentHeight,
     };
+
+    positionRef.current.width = w !== "auto" ? w : width;
+    positionRef.current.right = parentWidth - width - positionRef.current.left;
+    positionRef.current.height = h !== "auto" ? h : height;
+    positionRef.current.bottom =
+      parentHeight - height - positionRef.current.top;
+
+
+      $elRef.current.style.width = positionRef.current.width + "px";
+      $elRef.current.style.height = positionRef.current.height + "px";
     setLocalState((state: any) => {
       return {
         ...state,
-        bottom: parentHeight - height - top,
-        right: parentWidth - width - left,
-        width: w !== "auto" ? w : width,
-        height: h !== "auto" ? h : height,
         aspectFactor: (w !== "auto" ? w : width) / (h !== "auto" ? h : height),
       };
     });
@@ -881,6 +874,17 @@ const ReactDraggableResizableCore = (props: any) => {
       removeEvent(window, "resize", checkParentSize);
     };
   }, []);
+
+  useEffect(() => {
+    if (resizing || dragging) {
+      return;
+    }
+
+    if (parent) {
+      boundsRef.current = calcResizeLimits();
+    }
+    changeHeight(h);
+  }, [h]);
 
   const classNames = [
     enabled && classNameActive,
